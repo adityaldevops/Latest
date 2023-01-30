@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "model-manager"
+version = "0.1.0"
+description = ""
+authors = ["PRAMOD KUMAR <pramod.kumar@statusneo.com>"]
+readme = "README.md"
+packages = [{include = "model_manager"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+flake8 = "==6.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
