@@ -28,14 +28,16 @@ MAKEFILE_PROJECT = $(ROOT_DIR)/Makefile
 MAKEFILE_PROTO = $(MAKE_DIR)/proto.mk
 MAKE_ROOT = @$(MAKE) -C $(ROOT_DIR) -f $(MAKEFILE_PROJECT)
 MAKE_PROTO = @$(MAKE) -C $(MAKE_DIR) -f $(MAKEFILE_PROTO)
+SHELL=/bin/bash  # Need to specify bash in order for conda activate to work.
+# Note that the extra activate is needed to ensure that the activate floats env to the front of PATH
+CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
 
 compile-proto: install
 	$(shell mkdir $(PROTO_BUILD_PATH))
-	$(PYTHON) $(PROTO_BUILD_SCRIPT) --protopath $(PROTO_PATH) --pythonpath $(PROTO_BUILD_PATH)
-	$(MAKE_PROTO) clean-proto-build
+	bash -c "$(CONDA_ACTIVATE) $(PROJECT); $(PYTHON) $(PROTO_BUILD_SCRIPT) --protopath $(PROTO_PATH) --pythonpath $(PROTO_BUILD_PATH)"
+	$(MAKE_PROTO) clean-proto-build PROJECT_DIR=$(PROJECT_DIR)
 
 install: clean $(PROTO_PATH)
-	$(PIP) install $(TWINE) keyring artifacts-keyring setuptools wheel protobuf grpcio grpcio-tools
 	$(shell cd $(ROOT_DIR); git clone $(GOOGLEAPIS_GIT_REPO);)
 	mkdir -p $(PROTO_GOOGLE_API) && cp -R $(GOOGLEAPIS_PROTO_PATH)/annotations.proto $(GOOGLEAPIS_PROTO_PATH)/http.proto $(PROTO_GOOGLE_API)
 
