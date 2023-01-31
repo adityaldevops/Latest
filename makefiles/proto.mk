@@ -24,9 +24,9 @@ GOOGLE = google
 GOOGLEAPIS_PROTO_PATH = $(ROOT_DIR)/googleapis/$(GOOGLE)/api
 PROTO_GOOGLE = $(PROTO_PATH)/$(GOOGLE)
 PROTO_GOOGLE_API = $(PROTO_GOOGLE)/api
-MAKEFILE_PROJECT = $(ROOT_DIR)/Makefile
+MAKEFILE_ROOT = $(ROOT_DIR)/Makefile
 MAKEFILE_PROTO = $(MAKE_DIR)/proto.mk
-MAKE_ROOT = @$(MAKE) -C $(ROOT_DIR) -f $(MAKEFILE_PROJECT)
+MAKE_ROOT = @$(MAKE) -C $(ROOT_DIR) -f $(MAKEFILE_ROOT)
 MAKE_PROTO = @$(MAKE) -C $(MAKE_DIR) -f $(MAKEFILE_PROTO)
 SHELL=/bin/bash  # Need to specify bash in order for conda activate to work.
 # Note that the extra activate is needed to ensure that the activate floats env to the front of PATH

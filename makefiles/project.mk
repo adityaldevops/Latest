@@ -21,7 +21,7 @@ help:
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
 clean-build: ## remove build artifacts
-	find $(ROOT_DIR)/. -name 'build*' -exec rm -fr {} +
+	find $(ROOT_DIR)/. -name 'build_proto' -exec rm -fr {} +
 	find $(ROOT_DIR)/. -name 'dist' -exec rm -fr {} +
 	find $(ROOT_DIR)/. -name '*.eggs' -exec rm -fr {} +
 	find $(ROOT_DIR)/. -name '*.egg-info' -exec rm -fr {} +
@@ -41,9 +41,16 @@ clean-test: ## remove test and coverage artifacts
 	find $(ROOT_DIR)/. -name '*.pytest_cache' -exec rm -fr {} +
 
 lint/flake8: ## check style with flake8
-	flake8 $(ROOT_DIR)/$(PROJECT) tests
+	bash -c "$(CONDA_ACTIVATE) $(PROJECT); flake8 $(PROJECT_DIR) $(ROOT_DIR)/tests"
 
-lint: lint/flake8 ## check style
+lint/protolint: ## check style with protolint
+	$(shell protolint lint $(PROJECT_DIR))
+
+lint/install:
+	brew tap yoheimuta/protolint
+	brew install protolint
+
+lint: lint/flake8 lint/install lint/protolint ## check style
 
 test: ## run tests quickly with the default Python
 	pytest
