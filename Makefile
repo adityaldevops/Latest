@@ -24,3 +24,6 @@ clean:
 
 compile-proto: 
 	$(MAKE_PROTO) compile-proto
+
+build-proto: 
+	$(MAKE_PROTO) build-proto

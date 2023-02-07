@@ -1,4 +1,27 @@
+__VERSION__='1.0.9'
 import os, sys
+
+VERSION_TAG = '__VERSION__'
+CURRENT_FILE = f"./{os.path.basename(__file__)}"
+PACKAGE_NAME = 'telos-proto'
+
+def _get_setup_content():
+    SETUP_CONTENT = '''
+import setuptools
+
+setuptools.setup(
+    name="{name}",
+    version="{version_tag}",
+    author="me",
+    author_email="me@example.com",
+    description="",
+    long_description="",
+    long_description_content_type="text/markdown",
+    packages=setuptools.find_packages("{package_path}"),
+)
+'''
+    return SETUP_CONTENT
+
 
 class Converter:
     def _get_python_path():
@@ -37,6 +60,37 @@ class Converter:
 
 
     @staticmethod
+    def _create_init_files():
+        for root, _, __ in os.walk(Converter.PYTHON_PATH):
+            open(os.path.join(root, '__init__.py'), 'w+')
+
+    @staticmethod
+    def _create_setup_file():
+        SETUP_CONTENT = _get_setup_content()
+        setup_file = open(os.path.join(Converter.PYTHON_PATH, 'setup.py'), 'w+')
+        NEW_VERSION = Converter.inc_version()
+        lines = SETUP_CONTENT.format(name=PACKAGE_NAME, version_tag=NEW_VERSION, package_path='.')
+        setup_file.write(lines)
+        Converter.write_version_file(NEW_VERSION)
+
+    @staticmethod
+    def inc_version():
+        major, minor, patch = __VERSION__.split('.')
+        patch = int(patch) + 1
+        return f'{major}.{minor}.{patch}'
+
+    @staticmethod
+    def write_version_file(NEW_VERSION):
+        version_file = open(os.path.join(CURRENT_FILE), 'r')
+        file_data = version_file.readlines()
+        for idx, line in enumerate(file_data):
+            if (line.find(f"{VERSION_TAG}='{__VERSION__}'") != -1):
+                file_data[idx] = f"{VERSION_TAG}='{NEW_VERSION}'\n"
+        
+        with open(os.path.join(CURRENT_FILE), 'w') as version_file:
+            version_file.writelines(file_data)
+
+    @staticmethod
     def _get_files_with_suffix(root_dir, suffix):
         files = list()
         for root, dirnames, filenames in os.walk(root_dir):
@@ -55,3 +109,5 @@ class Converter:
 
 
 Converter._compile_protos()
+Converter._create_init_files()
+Converter._create_setup_file()

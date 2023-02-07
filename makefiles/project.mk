@@ -1,12 +1,15 @@
 .PHONY: clean clean-build clean-pyc clean-test help lint lint/flake8 test test-all run env-setup
 .DEFAULT_GOAL := help
 
+PYTHON = python3
+PIP = pip3
 PROJECT = model_manager
 ROOT_DIR = $(PWD)
 PROJECT_DIR = $(ROOT_DIR)/$(PROJECT)
 MAKE_DIR = $(ROOT_DIR)/makefiles
 CONDA_ENV_CONFIG_FILE = $(MAKE_DIR)/conda_env_config.yml
 ENV_CONFIG_FILE = $(ROOT_DIR)/local.env
+APP_FILE = $(ROOT_DIR)/app.py
 PROJECT = model_manager
 CONDA_ENV = $(shell conda env list | grep $(PROJECT))
 SHELL=/bin/bash  # Need to specify bash in order for conda activate to work.
@@ -16,7 +19,7 @@ MAKEFILE_PROTO = $(MAKE_DIR)/proto.mk
 MAKE_PROTO = @$(MAKE) -C $(MAKE_DIR) -f $(MAKEFILE_PROTO)
 
 help:
-	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
+	@$(PYTHON) -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
@@ -59,7 +62,7 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 run: env-setup
-	bash -c "$(CONDA_ACTIVATE) $(PROJECT); source $(ENV_CONFIG_FILE);"
+	bash -c "$(CONDA_ACTIVATE) $(PROJECT); source $(ENV_CONFIG_FILE); $(PYTHON) $(APP_FILE)"
 
 env-setup: $(ROOT_DIR)/pyproject.toml clean
 	bash -c "if [ -z '$(CONDA_ENV)' ]; then conda env create -f $(CONDA_ENV_CONFIG_FILE) -n $(PROJECT); fi"
