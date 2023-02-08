@@ -2,7 +2,6 @@
 .DEFAULT_GOAL := help
 
 PYTHON = python3
-PIP = pip3
 PROJECT = model_manager
 ROOT_DIR = $(PWD)
 PROJECT_DIR = $(ROOT_DIR)/$(PROJECT)
@@ -17,6 +16,13 @@ SHELL=/bin/bash  # Need to specify bash in order for conda activate to work.
 CONDA_ACTIVATE=source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
 MAKEFILE_PROTO = $(MAKE_DIR)/proto.mk
 MAKE_PROTO = @$(MAKE) -C $(MAKE_DIR) -f $(MAKEFILE_PROTO)
+PIP_PRIVATE_REPO = AZURE_ARTIFACTS
+PIP_PRIVATE_REPO_USERNAME = test
+PIP_PRIVATE_REPO_PASSWORD = hpvgr47fiidfau7chvt6poznw73hvvgmg2nr7otfmdnmnnlvzmvq
+SET_POETRY_PRIVATE_REPO_CREDENTIALS = \
+	export POETRY_HTTP_BASIC_$(PIP_PRIVATE_REPO)_USERNAME=$(PIP_PRIVATE_REPO_USERNAME); \
+	export POETRY_HTTP_BASIC_$(PIP_PRIVATE_REPO)_PASSWORD=$(PIP_PRIVATE_REPO_PASSWORD)
+
 
 help:
 	@$(PYTHON) -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
@@ -66,4 +72,8 @@ run: env-setup
 
 env-setup: $(ROOT_DIR)/pyproject.toml clean
 	bash -c "if [ -z '$(CONDA_ENV)' ]; then conda env create -f $(CONDA_ENV_CONFIG_FILE) -n $(PROJECT); fi"
-	bash -c "$(CONDA_ACTIVATE) $(PROJECT); poetry install"
+	bash -c " \
+		$(CONDA_ACTIVATE) $(PROJECT); \
+		$(SET_POETRY_PRIVATE_REPO_CREDENTIALS); \
+		poetry install; \
+	"
