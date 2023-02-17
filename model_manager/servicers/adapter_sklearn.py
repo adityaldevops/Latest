@@ -11,7 +11,7 @@ class SklearnAdapter:
     """ Weights, hyperparameters, attribute from the sklearn model """
     def get_architecture_from_sklearn(self,loaded_model):
 
-        return self.__parameters(loaded_model), self.__attributes(loaded_model), self.__hyperparameters(loaded_model)
+        return self.__parameters(loaded_model), self.__hyperparameters(loaded_model)
     
     def export_to_sklearn(self,model_train_dict, model_details, output_format, modelfile_path):
 
@@ -32,6 +32,14 @@ class SklearnAdapter:
         
     def __parameters(self,model):
         weights = {i: model.__dict__[i] for i in model.__dict__ if i.endswith('_') and not i.startswith('_')}
+
+        data1 = set(loaded_model.__dict__.keys())-set(loaded_model.get_params().keys())
+        attributes={}
+        for i in data1:
+            if not i.endswith('_') or i.startswith('_'):
+                attributes[i]=loaded_model.__dict__[i]
+        
+        weights.update(attributes)
         return weights
         
     def __methods(self,loaded_model):
@@ -41,15 +49,6 @@ class SklearnAdapter:
         #print("There are {} Model Attributes ".format(len(model_attributes)),"\n")
         
         return model_attributes
-
-    def __attributes(self,loaded_model):
-        data1 = set(loaded_model.__dict__.keys())-set(loaded_model.get_params().keys())
-        attributes={}
-        for i in data1:
-            if not i.endswith('_') or i.startswith('_'):
-                attributes[i]=loaded_model.__dict__[i]
-        
-        return attributes
         
     def __hyperparameters(self,model):
         hyperparameters_names, hyperparameters_values = [], []

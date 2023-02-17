@@ -22,10 +22,10 @@ class adapter:
 
         if self.model_details["Framework"] == 'sklearn' or self.model_details["Framework"] == 'xgboost' or self.model_details["Framework"] == 'lightgbm':
             if self.model_details["file_type"] == 'dict':
-                h,p,a = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model['model object'])
+                p,h = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model['model object'])
             else:
-                h,p,a = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model)
-            return h,p,a,self.model_details
+                p,h = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model)
+            return p,h,self.model_details
         elif self.model_details["Framework"]  == 'tensorflow' or self.model_details["Framework"]  == 'keras':
             pass
         elif self.model_details["Framework"] == 'weka':
