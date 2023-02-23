@@ -2,7 +2,7 @@
 import os
 import json
 
-from model_manager.utils.services.Adapter.adapter_sklearn import SklearnAdapter
+from model_manager.utils.services.adapter.adapter_sklearn import SklearnAdapter
 
 
 class Adapter:

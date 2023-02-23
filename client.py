@@ -13,8 +13,8 @@ def run():
         # model_name = f'{MODEL_PATH}/XGBmodel-numeric.pkl'
         response = stub.ImportModel(service_pb2.ImportModelRequest(model_name=model_name))
         print("import model response: ", response.status)
-        response = stub.ExportModel(service_pb2.ExportModelRequest(model_name=model_name))
-        print("export model response: ", response.status)
+        # response = stub.ExportModel(service_pb2.ExportModelRequest(model_name=model_name))
+        # print("export model response: ", response.status)
         # response = stub.DeployModel(service_pb2.DeployModelRequest(model_name=model_name))
         # print("deploy model response: ", response.status)
 
