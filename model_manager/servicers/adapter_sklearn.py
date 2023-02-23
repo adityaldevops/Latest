@@ -33,11 +33,11 @@ class SklearnAdapter:
     def __parameters(self,model):
         weights = {i: model.__dict__[i] for i in model.__dict__ if i.endswith('_') and not i.startswith('_')}
 
-        data1 = set(loaded_model.__dict__.keys())-set(loaded_model.get_params().keys())
+        data1 = set(model.__dict__.keys())-set(model.get_params().keys())
         attributes={}
         for i in data1:
             if not i.endswith('_') or i.startswith('_'):
-                attributes[i]=loaded_model.__dict__[i]
+                attributes[i]=model.__dict__[i]
         
         weights.update(attributes)
         return weights
