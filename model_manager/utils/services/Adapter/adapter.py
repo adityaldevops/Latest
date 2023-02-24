@@ -1,14 +1,16 @@
 #from adapter_keras import KerasAdapter
 import os
-import json
-
+import weka.core.jvm as jvm
 from model_manager.utils.services.adapter.adapter_sklearn import SklearnAdapter
-
+from model_manager.utils.services.adapter.adapter_weka import WekaAdapter
 
 class Adapter:
 
     def __init__(self) -> None:
-        pass
+        jvm.start()
+
+    def __del__(self):
+        jvm.stop()
 
     def import_model(self,weights_path):
         
@@ -18,22 +20,31 @@ class Adapter:
 
         if self.model_details["Framework"] == 'sklearn' or self.model_details["Framework"] == 'xgboost' or self.model_details["Framework"] == 'lightgbm':
             if self.model_details["file_type"] == 'dict':
-                h,p,a = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model['model object'])
+                p,h = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model['model object'])
             else:
-                h,p,a = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model)
-            return h,p,a,self.model_details
+                p,h = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model)
+            return p,h,self.model_details
         elif self.model_details["Framework"]  == 'tensorflow' or self.model_details["Framework"]  == 'keras':
             pass
+        elif self.model_details["Framework"] == 'weka':
+            p,h=  WekaAdapter().get_architecture_from_weka(self.loaded_model)
+            return p,h,self.model_details
         #elif self.model_details["Framework"]  == 'torch':
         #    return self.get_architecture_from_torch()
 
-    def export_model(self, hyperparameters , parameters , attributes, model_details, output_format, export_path, model_name):
+    def export_model(self, hyperparameters , parameters, model_details , output_framework, output_format, export_path, model_name):
 
         modelfile_name= os.path.join(export_path,model_name)
-        model_dictionary = self.__create_model_dict(hyperparameters, parameters, attributes)
+        model_dictionary = self.__create_model_dict(hyperparameters, parameters)
 
 
-        if self.model_details["Framework"] == 'sklearn' or self.model_details["Framework"] == 'xgboost':
+        if output_framework == 'sklearn' or output_framework == 'xgboost':
+            model_details["Framework"] = output_framework
+            model_details["Library"] = "sklearn.linear_model._logistic"
+            model_details["Algorithm"]= "LogisticRegression"
+
+            print("Got training dictionary: {} \n".format(model_dictionary))
+
             SklearnAdapter().export_to_sklearn(model_dictionary, model_details, output_format, modelfile_name)
 
 
@@ -74,10 +85,18 @@ class Adapter:
                 model = tf.keras.models.load_model(open((weights_path).strip("'"),'rb'))
                 return model
 
+        elif extension == '.model':
+            from weka.classifiers import Classifier
+            model,data = Classifier.deserialize(weights_path)
+            return model
+
         else:
             print("Unrecognized file type")
             return ""
         
+        
+
+
 
     def __get_model_framework(self,loaded_model):
         """ get model framework whether (tf, sklearn, torch)"""
@@ -92,6 +111,10 @@ class Adapter:
             model_details["file_type"] = 'dict'
             model_type = str(type(loaded_model['model object']))
             model_type = model_type[8:-2]
+        elif model_type.startswith("weka"):
+            model_type = str(loaded_model.classname)
+
+            
         model_framework = list(model_type.split("."))
         model_import = list(model_type.rsplit(".",1))
         
@@ -101,14 +124,13 @@ class Adapter:
         
         model_details["Framework"]= model_framework[0]
         model_details["Library"]=model_import[0]
-        model_details["Algorithm"]=model_import[1]
+        model_details["Algorithm"]=model_import[-1]
 
         return model_details
 
-    def __create_model_dict(self,hyperparameters, parameters, attributes):
+    def __create_model_dict(self,hyperparameters, parameters):
         model_data_dict = {}
         model_data_dict.update(hyperparameters)
         model_data_dict.update(parameters)
-        model_data_dict.update(attributes)
 
         return model_data_dict
