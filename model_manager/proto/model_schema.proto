@@ -9,13 +9,17 @@ option java_multiple_files = true;
 
 message ModelSchema {
 	HyperParameter hyperparameters = 1;
-	string parameters = 2;
-	string attributes = 3;
-	string model_details = 4;
+	Parameter parameters = 2;
+	ModelDetails model_details = 3;
+	string attributes = 4;
 }
 
 message StrVector {
-  repeated string element = 1;
+	repeated string element = 1;
+}
+
+message F32Vector {
+    repeated float element = 1;
 }
 
 message HyperParameter {
@@ -44,4 +48,20 @@ message HyperParameter {
 	optional string penalty = 23;
 	optional string solver = 24;
 	optional float tol = 25;
+}
+
+message Parameter {
+	repeated string feature_names_in_ = 1; 
+	optional int32 n_features_in_ = 2; 
+	repeated int32 classes_ = 3; 
+	repeated int32 n_iter_ = 4; 
+	optional string coef_ = 5; 
+	repeated float intercept_ = 6; 
+}
+
+message ModelDetails {
+	optional string file_type = 1; 
+	optional string Framework  = 2; 
+	optional string Library = 3; 
+	optional string Algorithm = 4; 
 }

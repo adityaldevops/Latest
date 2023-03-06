@@ -3,7 +3,7 @@ import importlib
 import os
 import re
 from io import StringIO
-import pandas as pd
+# import pandas as pd
 import numpy as np
 
 class WekaAdapter:

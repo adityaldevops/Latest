@@ -20,9 +20,12 @@ class SklearnAdapter:
         model.__dict__=model_train_dict
         #model.__dict__['multi_class'] = "ovr"
 
-        self.__create_serialized_object(model , output_format, modelfile_path)
+        file_name = self.__create_serialized_object(model , output_format, modelfile_path)
 
         print("Model exported to {} in {} format".format(model_details["Framework"], output_format))
+
+        return file_name
+
     
 
 
@@ -75,7 +78,11 @@ class SklearnAdapter:
         
         if output_format == 'pickle':
             import pickle
-            pickle.dump(model, open(modelfile_name+".pkl", 'wb'))
+            modelfile_name = modelfile_name+".pkl"
+            pickle.dump(model, open(modelfile_name, 'wb'))
         elif output_format == 'joblib':
             import joblib
-            joblib.dump(model, open(modelfile_name+".joblib", 'wb'))
+            modelfile_name = modelfile_name+".joblib"
+            joblib.dump(model, open(modelfile_name, 'wb'))
+        
+        return modelfile_name

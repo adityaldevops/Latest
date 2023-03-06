@@ -1,29 +1,34 @@
 #from adapter_keras import KerasAdapter
 import os
-import weka.core.jvm as jvm
+import json
+
 from model_manager.utils.services.adapter.adapter_sklearn import SklearnAdapter
 from model_manager.utils.services.adapter.adapter_weka import WekaAdapter
-
+# import weka.core.jvm as jvm
+import numpy as np
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 class Adapter:
 
     def __init__(self) -> None:
-        jvm.start()
+        self.model_details = dict()
+        # jvm.start()
 
     def __del__(self):
-        jvm.stop()
+        # jvm.stop()
+        pass
 
-    def import_model(self,weights_path):
+    def import_model(self,weights_url):
         
-        self.weights_path = weights_path
-        self.loaded_model = self.__load_model(weights_path)
-        self.model_details = self.__get_model_framework(self.loaded_model)
+        self.weights_path = self.__download_blob_from_url(weights_url)
+        self.loaded_model = self.__load_model(self.weights_path)
+        model_details = self.__get_model_framework(self.loaded_model)
 
         if self.model_details["Framework"] == 'sklearn' or self.model_details["Framework"] == 'xgboost' or self.model_details["Framework"] == 'lightgbm':
-            if self.model_details["file_type"] == 'dict':
-                p,h = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model['model object'])
+            if model_details["file_type"] == 'dict':
+                h,p = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model['model object'])
             else:
-                p,h = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model)
-            return p,h,self.model_details
+                h,p = SklearnAdapter().get_architecture_from_sklearn(self.loaded_model)
+            return h,p,model_details
         elif self.model_details["Framework"]  == 'tensorflow' or self.model_details["Framework"]  == 'keras':
             pass
         elif self.model_details["Framework"] == 'weka':
@@ -34,7 +39,8 @@ class Adapter:
 
     def export_model(self, hyperparameters , parameters, model_details , output_framework, output_format, export_path, model_name):
 
-        modelfile_name= os.path.join(export_path,model_name)
+        export_base_path = "."
+        modelfile_name= os.path.join(export_base_path,model_name)
         model_dictionary = self.__create_model_dict(hyperparameters, parameters)
 
 
@@ -45,7 +51,13 @@ class Adapter:
 
             print("Got training dictionary: {} \n".format(model_dictionary))
 
-            SklearnAdapter().export_to_sklearn(model_dictionary, model_details, output_format, modelfile_name)
+            file_name = SklearnAdapter().export_to_sklearn(model_dictionary, model_details, output_format, modelfile_name)
+
+        local_path = os.path.join(export_base_path,file_name)
+        self.upload_to_url(export_path, local_path)
+
+
+
 
 
     ############################
@@ -58,7 +70,47 @@ class Adapter:
   
         # extract the file name and extension
         return split_path[1]
-  
+
+    def __extract_filename(self,url):
+        
+        filename = os.path.split(url)[1]
+        return filename
+
+    def __download_blob_from_url(self,url):
+        blob_name = self.__extract_filename(url)
+        blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=cortexstorageaccount3597;AccountKey=UvEDsaZj7tqLFemPeTnUCjxbYrUINHv1ANh38rcybgeB+vsYYd/ct+VvIXrgQ0nPvkcLF/A6192S+AStunHvXw==;EndpointSuffix=core.windows.net")
+        container_client = blob_service_client.get_container_client("content")
+        blob_client = container_client.get_blob_client(blob_name)
+
+        # download the blob and save to a file
+        with open(blob_name, "wb") as my_blob:
+            download_stream = blob_client.download_blob()
+            my_blob.write(download_stream.readall())
+
+        return blob_name
+
+    def upload_to_url(self, url,local_path):
+
+        # Create a BlobServiceClient object
+        blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=cortexstorageaccount3597;AccountKey=UvEDsaZj7tqLFemPeTnUCjxbYrUINHv1ANh38rcybgeB+vsYYd/ct+VvIXrgQ0nPvkcLF/A6192S+AStunHvXw==;EndpointSuffix=core.windows.net")
+
+        # Create a ContainerClient object
+        container_client = blob_service_client.get_container_client("content")
+
+        # Set the path to your file
+        #local_path = "/Users/lakshikaparihar/Documents/Jio-Project/cortex/adapter/exported_models"
+        file_name = os.path.basename(local_path)
+
+        # Create a BlobClient object for your file
+        blob_client = container_client.get_blob_client(file_name)
+
+        # Upload the file to Blob Storage
+        with open(local_path, "rb") as data:
+            print('data', '\n', data)
+            blob_client.upload_blob(data)
+
+        print("Model Uploaded to Azure Blob Storage")
+
 
     def __load_model(self, weights_path):
         
@@ -101,14 +153,14 @@ class Adapter:
     def __get_model_framework(self,loaded_model):
         """ get model framework whether (tf, sklearn, torch)"""
 
-        model_details = {"file_type":"Empty"}
+        self.model_details["file_type"] = "Empty"
         model_type = str(type(loaded_model))
         
 
         model_type = model_type[8:-2]
         print("model-type: ", model_type)
         if model_type == 'dict':
-            model_details["file_type"] = 'dict'
+            self.model_details["file_type"] = 'dict'
             model_type = str(type(loaded_model['model object']))
             model_type = model_type[8:-2]
         elif model_type.startswith("weka"):
@@ -122,11 +174,11 @@ class Adapter:
         print('Import statement : ', model_import[0])
         print('Algorithm : ', model_import[1])
         
-        model_details["Framework"]= model_framework[0]
-        model_details["Library"]=model_import[0]
-        model_details["Algorithm"]=model_import[-1]
+        self.model_details["Framework"]= model_framework[0]
+        self.model_details["Library"]=model_import[0]
+        self.model_details["Algorithm"]=model_import[-1]
 
-        return model_details
+        return self.model_details
 
     def __create_model_dict(self,hyperparameters, parameters):
         model_data_dict = {}
