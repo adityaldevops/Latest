@@ -19,7 +19,7 @@ class Adapter:
 
     def import_model(self,weights_url):
         
-        self.weights_path = self.__download_blob_from_url(weights_url)
+        self.weights_path = self.download_blob_from_url(weights_url)
         self.loaded_model = self.__load_model(self.weights_path)
         model_details = self.__get_model_framework(self.loaded_model)
 
@@ -37,7 +37,7 @@ class Adapter:
         #elif self.model_details["Framework"]  == 'torch':
         #    return self.get_architecture_from_torch()
 
-    def export_model(self, hyperparameters , parameters, model_details , output_framework, output_format, export_path, model_name):
+    def export_model(self, hyperparameters , parameters, model_details , output_framework, output_format, model_name):
 
         export_base_path = "."
         modelfile_name= os.path.join(export_base_path,model_name)
@@ -54,7 +54,7 @@ class Adapter:
             file_name = SklearnAdapter().export_to_sklearn(model_dictionary, model_details, output_format, modelfile_name)
 
         local_path = os.path.join(export_base_path,file_name)
-        self.upload_to_url(export_path, local_path)
+        self.upload_to_url(local_path)
 
 
 
@@ -76,7 +76,7 @@ class Adapter:
         filename = os.path.split(url)[1]
         return filename
 
-    def __download_blob_from_url(self,url):
+    def download_blob_from_url(self,url):
         blob_name = self.__extract_filename(url)
         blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=cortexstorageaccount3597;AccountKey=UvEDsaZj7tqLFemPeTnUCjxbYrUINHv1ANh38rcybgeB+vsYYd/ct+VvIXrgQ0nPvkcLF/A6192S+AStunHvXw==;EndpointSuffix=core.windows.net")
         container_client = blob_service_client.get_container_client("content")
@@ -89,7 +89,7 @@ class Adapter:
 
         return blob_name
 
-    def upload_to_url(self, url,local_path):
+    def upload_to_url(self, local_path):
 
         # Create a BlobServiceClient object
         blob_service_client = BlobServiceClient.from_connection_string("DefaultEndpointsProtocol=https;AccountName=cortexstorageaccount3597;AccountKey=UvEDsaZj7tqLFemPeTnUCjxbYrUINHv1ANh38rcybgeB+vsYYd/ct+VvIXrgQ0nPvkcLF/A6192S+AStunHvXw==;EndpointSuffix=core.windows.net")

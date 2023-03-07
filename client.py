@@ -3,10 +3,7 @@ from config.config import AppConfig
 from telos.cortex.model_manager import service_pb2_grpc as model_manager_svc_pb2_grpc, service_pb2 as model_manager_svc_pb2
 from telos.core.base import enums_pb2
 from telos.cortex.model.instance import artifact_pb2
-import os
 
-ROOT_DIR = os.getcwd() #'/Users/pramod19.kumar/Documents/statusneo/model-manager'
-# MODEL_PATH = f'{ROOT_DIR}/model_manager/store/import_models' #import_models
 MODEL_PATH = "https://cortexstorageaccount3597.blob.core.windows.net/content"
 
 def get_token():
@@ -15,7 +12,7 @@ def get_token():
     return token
 
 def get_request_data(action_type):
-    model_url = f'{MODEL_PATH}/LogisticRegressionModel.pkl'  #textproto #f'{MODEL_PATH}/XGBmodel-numeric.pkl'
+    model_url = f'{MODEL_PATH}/LogisticRegressionModel.pkl'
     request_data = {
         'model_token': {
             'vertical': 'vertical',
@@ -47,7 +44,6 @@ def run():
         stub = model_manager_svc_pb2_grpc.CortexModelManagerStub(channel)
 
         request_data = get_request_data('import')
-        print("request_data: ", request_data)
         response = stub.ImportModelInstance(model_manager_svc_pb2.ImportModelInstanceRequest(**request_data))
         print("import model response: ", response.status)
 
